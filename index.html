@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SF6 Replay Bridge</title>
+  <style>
+    body{font-family:system-ui,-apple-system,sans-serif;background:#0b1020;color:#e8edf7;margin:0}
+    main{max-width:1100px;margin:0 auto;padding:28px}
+    .card{background:#141b2d;border:1px solid #26314c;border-radius:16px;padding:20px;margin:14px 0}
+    .row{display:flex;gap:14px;flex-wrap:wrap}.metric{min-width:160px}
+    .muted{color:#9da9bd}.ok{color:#70e1a1}.bad{color:#ff8f8f}
+    button{background:#4b73ff;color:white;border:0;border-radius:10px;padding:10px 16px;font-weight:700;cursor:pointer}
+    pre{white-space:pre-wrap;word-break:break-word;background:#090d18;padding:14px;border-radius:12px;max-height:520px;overflow:auto}
+  </style>
+</head>
+<body>
+<main>
+  <h1>SF6 Replay Bridge</h1>
+  <p class="muted">User Code 3032582018 / おばけたろう</p>
+  <button id="refresh">今すぐ更新</button>
+  <div id="status" class="card">取得中…</div>
+  <div id="metrics" class="row"></div>
+  <div class="card"><h2>直近の試合</h2><pre id="matches">—</pre></div>
+  <div class="card"><h2>ChatGPT監視用 JSON</h2><p><a href="/api/state" style="color:#8fb2ff">/api/state</a></p><pre id="json">—</pre></div>
+</main>
+<script>
+async function load(){
+  const status=document.getElementById('status');
+  status.textContent='取得中…';
+  try{
+    const r=await fetch('/api/state?ts='+Date.now(),{cache:'no-store'});
+    const j=await r.json();
+    status.innerHTML='<b class="'+(j.ok?'ok':'bad')+'">'+(j.ok?'取得成功':'取得失敗')+'</b>　最終取得: '+(j.fetchedAt||'—')+(j.error?'<br>'+j.error:'');
+    document.getElementById('metrics').innerHTML=
+      '<div class="card metric"><b>Current MR</b><div>'+(j.currentMR??'—')+'</div></div>'+
+      '<div class="card metric"><b>Peak MR</b><div>'+(j.peakMR??'—')+'</div></div>'+
+      '<div class="card metric"><b>Last Played</b><div>'+(j.lastPlayed??'—')+'</div></div>';
+    document.getElementById('matches').textContent=JSON.stringify(j.recentMatches||[],null,2);
+    document.getElementById('json').textContent=JSON.stringify(j,null,2);
+  }catch(e){status.innerHTML='<b class="bad">エラー</b> '+e.message}
+}
+document.getElementById('refresh').onclick=load; load();
+</script>
+</body>
+</html>
