@@ -1,0 +1,13 @@
+{
+  "userCode": "3032582018",
+  "playerName": "おばけたろう",
+  "bridgeStateUrl": "https://sf6-replay-bridge.vercel.app/api/state",
+  "uploadUrl": "https://sf6-replay-bridge.vercel.app/api/upload",
+  "recorderApiKey": "VERCELに設定したRECORDER_API_KEYと同じ文字列",
+  "pollSeconds": 20,
+  "deleteAfterUpload": true,
+  "obs": {
+    "url": "ws://127.0.0.1:4455",
+    "password": "OBS_WEBSOCKET_PASSWORD"
+  }
+}
