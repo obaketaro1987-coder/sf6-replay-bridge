@@ -1,0 +1,8 @@
+{
+  "functions": {
+    "api/state.js": {
+      "maxDuration": 60,
+      "memory": 1024
+    }
+  }
+}
