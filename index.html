@@ -12,6 +12,7 @@
     .muted{color:#9da9bd}.ok{color:#70e1a1}.bad{color:#ff8f8f}
     button{background:#4b73ff;color:white;border:0;border-radius:10px;padding:10px 16px;font-weight:700;cursor:pointer}
     pre{white-space:pre-wrap;word-break:break-word;background:#090d18;padding:14px;border-radius:12px;max-height:520px;overflow:auto}
+    a{color:#8fb2ff}.match{border-top:1px solid #26314c;padding:14px 0}.match:first-child{border-top:0}
   </style>
 </head>
 <body>
@@ -22,14 +23,21 @@
   <div id="status" class="card">取得中…</div>
   <div id="metrics" class="row"></div>
   <div class="card"><h2>直近の試合</h2><pre id="matches">—</pre></div>
+  <div class="card"><h2>自動録画</h2><div id="uploads">取得中…</div><p class="muted"><a href="/api/matches">/api/matches</a></p></div>
   <div class="card"><h2>ChatGPT監視用 JSON</h2><p><a href="/api/state" style="color:#8fb2ff">/api/state</a></p><pre id="json">—</pre></div>
 </main>
 <script>
+function escapeHtml(value){return String(value??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
 async function load(){
   const status=document.getElementById('status');
   status.textContent='取得中…';
+  const uploads=document.getElementById('uploads');
+  uploads.textContent='取得中…';
   try{
-    const r=await fetch('/api/state?ts='+Date.now(),{cache:'no-store'});
+    const [r,u]=await Promise.all([
+      fetch('/api/state?ts='+Date.now(),{cache:'no-store'}),
+      fetch('/api/matches?ts='+Date.now(),{cache:'no-store'})
+    ]);
     const j=await r.json();
     status.innerHTML='<b class="'+(j.ok?'ok':'bad')+'">'+(j.ok?'取得成功':'取得失敗')+'</b>　最終取得: '+(j.fetchedAt||'—')+(j.error?'<br>'+j.error:'');
     document.getElementById('metrics').innerHTML=
@@ -38,6 +46,20 @@ async function load(){
       '<div class="card metric"><b>Last Played</b><div>'+(j.lastPlayed??'—')+'</div></div>';
     document.getElementById('matches').textContent=JSON.stringify(j.recentMatches||[],null,2);
     document.getElementById('json').textContent=JSON.stringify(j,null,2);
+    const uj=await u.json();
+    if(!uj.configured){
+      uploads.innerHTML='<span class="bad">Vercel Blobの初回設定が必要です。</span>';
+    }else if(!uj.ok){
+      uploads.innerHTML='<span class="bad">取得失敗: '+escapeHtml(uj.error||'不明なエラー')+'</span>';
+    }else if(!(uj.matches||[]).length){
+      uploads.innerHTML='<span class="muted">まだ自動録画はありません。</span>';
+    }else{
+      uploads.innerHTML=uj.matches.map(m=>{
+        const title=Object.values(m.match||{}).filter(Boolean).slice(0,4).join(' / ');
+        const link=m.video?.url?'<a href="'+escapeHtml(m.video.url)+'" target="_blank" rel="noreferrer">動画を開く</a>':'動画なし';
+        return '<div class="match"><b>'+escapeHtml(title||m.matchKey||'試合')+'</b><br><span class="muted">'+escapeHtml(m.detectedAt||m.createdAt||'')+'</span><br>'+link+'</div>';
+      }).join('');
+    }
   }catch(e){status.innerHTML='<b class="bad">エラー</b> '+e.message}
 }
 document.getElementById('refresh').onclick=load; load();

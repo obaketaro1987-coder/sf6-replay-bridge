@@ -1,0 +1,6 @@
+node_modules/
+recorder/node_modules/
+recorder/config.json
+recorder/recorder-state.json
+recorder/logs/
+*.log
