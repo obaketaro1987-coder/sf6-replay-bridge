@@ -1,0 +1,10 @@
+{
+  "name": "sf6-replay-bridge",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@sparticuz/chromium": "latest",
+    "puppeteer-core": "latest"
+  }
+}
